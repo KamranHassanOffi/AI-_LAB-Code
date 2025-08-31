@@ -1,10 +1,5 @@
 # AI-_LAB-Code
 
-# ================================
-# Fraud Detection Agent Project (LightGBM Version, Clean Output)
-# ================================
-
-# 1. Dataset Acquisition
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -14,14 +9,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from lightgbm import LGBMClassifier
 
-# Load dataset
 df = pd.read_csv("/kaggle/input/creditcardfraud/creditcard.csv")
 print("✅ Dataset Shape:", df.shape)
 print(df.head())
 
-# ================================
-# 2. Data Preparation
-# ================================
 scaler = StandardScaler()
 df['Amount'] = scaler.fit_transform(df['Amount'].values.reshape(-1,1))
 df['Time'] = scaler.fit_transform(df['Time'].values.reshape(-1,1))
@@ -33,46 +24,32 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# ================================
-# 3. Agent Behavior Design (LightGBM)
-# ================================
 agent = LGBMClassifier(
     n_estimators=100,
     learning_rate=0.1,
     is_unbalance=True,
     random_state=42,
-    verbose=-1  # disables LightGBM info/warning messages
+    verbose=-1
 )
 agent.fit(X_train, y_train)
 
-# ================================
-# 4. Implementation: Testing
-# ================================
 y_pred = agent.predict(X_test)
 y_proba = agent.predict_proba(X_test)[:,1]
 
-# ================================
-# 5. Evaluation
-# ================================
 print("\n📊 Classification Report:\n", classification_report(y_test, y_pred))
 print("✅ Accuracy:", accuracy_score(y_test, y_pred))
 print("🎯 ROC-AUC Score:", roc_auc_score(y_test, y_proba))
 
-# Fraud vs Non-Fraud distribution
 fraud_count = df["Class"].value_counts()
 print("\n🔎 Transaction Distribution in Dataset:")
 print(fraud_count)
 print(f"Non-Fraud: {fraud_count[0]} | Fraud: {fraud_count[1]}")
 
-# Fraud vs Non-Fraud predictions
 pred_count = pd.Series(y_pred).value_counts()
 print("\n🤖 Model Predictions on Test Set:")
 print(f"Predicted Non-Fraud: {pred_count.get(0,0)}")
 print(f"Predicted Fraud: {pred_count.get(1,0)}")
 
-# ================================
-# 6. Visualization
-# ================================
 plt.figure(figsize=(6,4))
 sns.countplot(x="Class", data=df)
 plt.title("Distribution of Fraud vs Non-Fraud")
@@ -91,17 +68,11 @@ top_features = importances.nlargest(10)
 top_features.plot(kind="barh", figsize=(8,5), title="Top 10 Important Features")
 plt.show()
 
-# ================================
-# 7. Final Deliverable: Auto Sample Test
-# ================================
 sample = X_test.iloc[0]
 prediction = agent.predict([sample])[0]
 print("\n🧪 Auto Sample Test Transaction:")
 print("Prediction:", "🚨 Fraud" if prediction==1 else "✅ Not Fraud")
 
-# ================================
-# 8. Optional Manual Test
-# ================================
 choice = input("\nDo you want to run manual test? (y/n): ").strip().lower()
 
 if choice == "y":
@@ -116,11 +87,9 @@ if choice == "y":
         print("⚠️ Invalid input. Using default values: Time=50000, Amount=200")
         time_val, amount_val = 50000, 200
 
-    # Scale manually entered values using the SAME scaler
     time_scaled = scaler.transform([[time_val]])[0][0]
     amount_scaled = scaler.transform([[amount_val]])[0][0]
 
-    # Use median for other features to avoid "random-looking" output
     sample = X_train.median().copy()
     sample['Time'] = time_scaled
     sample['Amount'] = amount_scaled
